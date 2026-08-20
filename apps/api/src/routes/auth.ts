@@ -170,7 +170,10 @@ router.post('/logout', (req: Request, res: Response) => {
 router.get('/google', (req: Request, res: Response) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const reqHost = req.get('host') || 'localhost:3001';
-  const protocol = req.protocol || 'http';
+  // Render runs behind a proxy — req.protocol may return 'http' even on HTTPS.
+  // Always use HTTPS in production. Only fall back to http for localhost dev.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const protocol = isProduction ? 'https' : (req.protocol || 'http');
   const backendUrl = process.env.BACKEND_URL || `${protocol}://${reqHost}`;
   
   // Support both port 3001 and port 3000 redirect URIs

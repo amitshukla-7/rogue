@@ -48,6 +48,7 @@ const io = new Server(server, {
 
 // Attach socket io to app instance for route access
 app.set('io', io);
+app.set('trust proxy', 1);
 
 // Security Middlewares
 app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
