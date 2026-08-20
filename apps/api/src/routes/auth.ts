@@ -278,7 +278,8 @@ router.get('/google/callback', async (req: Request, res: Response) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const reqHost = req.get('host') || 'localhost:3001';
-  const protocol = req.protocol || 'http';
+  const isProduction = process.env.NODE_ENV === 'production';
+  const protocol = isProduction ? 'https' : (req.protocol || 'http');
   const backendUrl = process.env.BACKEND_URL || `${protocol}://${reqHost}`;
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
