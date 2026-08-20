@@ -1,0 +1,19 @@
+{
+  "name": "campusconnect-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=campusconnect-api",
+    "dev:web": "npm run dev --workspace=web",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "build": "npm run build --workspaces --if-present",
+    "start:api": "npm run start --workspace=campusconnect-api",
+    "start:web": "npm run start --workspace=web"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

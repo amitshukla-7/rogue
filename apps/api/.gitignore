@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build & compiled code
+dist/
+
+# Sensitive Environment files
+.env
+.env.*
+.env.local
+.env.production
+!.env.example
+
+# Local stores & logs
+data_store.json
+*.log
