@@ -20,8 +20,8 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@campusconnect/shared": ["./lib/shared-types.ts"],
-      "@campusconnect/shared/*": ["./lib/shared-types.ts"]
+      "@campusconnect/shared": ["./vendor/shared/index.ts"],
+      "@campusconnect/shared/*": ["./vendor/shared/*"]
     }
   },
   "include": [
