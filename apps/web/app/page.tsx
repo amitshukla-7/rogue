@@ -477,7 +477,7 @@ export default function HomePage() {
                     </div>
 
                     <div className="space-y-2">
-                      {post.poll.options.map((opt) => {
+                      {post.poll.options.map((opt: any) => {
                         const totalVotes = post.poll?.total_votes || 0;
                         const votes = opt.votes || 0;
                         const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
