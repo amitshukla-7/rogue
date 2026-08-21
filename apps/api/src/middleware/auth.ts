@@ -43,14 +43,16 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
       decoded.email === 'admin@campusconnect.com' ||
       decoded.email?.includes('aarav.sharma')
     ) {
-      res.clearCookie('token', { httpOnly: true, sameSite: 'lax', path: '/' });
+      const isProd = process.env.NODE_ENV === 'production';
+      res.clearCookie('token', { httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax', path: '/' });
       return res.status(401).json({ error: 'Unauthorized: Demo session invalidated' });
     }
 
     req.user = decoded;
     next();
   } catch (err) {
-    res.clearCookie('token', { httpOnly: true, sameSite: 'lax', path: '/' });
+    const isProd = process.env.NODE_ENV === 'production';
+    res.clearCookie('token', { httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax', path: '/' });
     return res.status(401).json({ error: 'Unauthorized: Invalid or expired session token' });
   }
 };

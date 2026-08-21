@@ -11,10 +11,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev';
 // Helper to sign JWT and set cookie
 const setAuthCookie = (res: Response, payload: { id: string; email: string; college_verified: boolean; is_admin?: boolean; is_banned?: boolean }) => {
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+  const isProd = process.env.NODE_ENV === 'production';
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days persistent session
   });
 };
@@ -162,7 +163,13 @@ router.post('/login', async (req: Request, res: Response) => {
 
 // Logout
 router.post('/logout', (req: Request, res: Response) => {
-  res.clearCookie('token');
+  const isProd = process.env.NODE_ENV === 'production';
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    path: '/'
+  });
   return res.status(200).json({ message: 'Logged out successfully' });
 });
 
@@ -574,10 +581,11 @@ router.post('/appeal', authenticateToken, async (req: AuthRequest, res: Response
 
 // POST Logout - Clears session JWT cookie
 router.post('/logout', (req: Request, res: Response) => {
+  const isProd = process.env.NODE_ENV === 'production';
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     path: '/'
   });
   return res.status(200).json({ success: true, message: 'Logged out successfully' });
