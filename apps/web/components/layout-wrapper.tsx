@@ -205,6 +205,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   };
 
   const logout = async () => {
+    try {
       await apiFetch('/api/auth/logout', { method: 'POST' });
       if (typeof window !== 'undefined') localStorage.removeItem('token');
       setUser(null);
