@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:3001');
+// In browser, ALWAYS use relative paths to hit the Next.js proxy and avoid 3rd-party cookie blocking.
+// In server components, use the full URL.
+const API_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;

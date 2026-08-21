@@ -26,8 +26,8 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     setLoading(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-    window.location.href = `${apiUrl}/api/auth/google`;
+    // Use relative path to hit Next.js proxy, ensuring cookies are set on the first-party domain
+    window.location.href = `/api/auth/google`;
   };
 
   return (
