@@ -174,7 +174,7 @@ router.get('/google', (req: Request, res: Response) => {
   // Always use HTTPS in production. Only fall back to http for localhost dev.
   const isProduction = process.env.NODE_ENV === 'production';
   const protocol = isProduction ? 'https' : (req.protocol || 'http');
-  const backendUrl = process.env.BACKEND_URL || `${protocol}://${reqHost}`;
+  const backendUrl = process.env.BACKEND_URL ? process.env.BACKEND_URL.trim().replace(/\/$/, '') : `${protocol}://${reqHost}`;
   
   // Support both port 3001 and port 3000 redirect URIs
   const redirectUri = `${backendUrl}/api/auth/google/callback`;
@@ -280,8 +280,8 @@ router.get('/google/callback', async (req: Request, res: Response) => {
   const reqHost = req.get('host') || 'localhost:3001';
   const isProduction = process.env.NODE_ENV === 'production';
   const protocol = isProduction ? 'https' : (req.protocol || 'http');
-  const backendUrl = process.env.BACKEND_URL || `${protocol}://${reqHost}`;
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const backendUrl = process.env.BACKEND_URL ? process.env.BACKEND_URL.trim().replace(/\/$/, '') : `${protocol}://${reqHost}`;
+  const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.trim().replace(/\/$/, '') : 'http://localhost:3000';
 
   let userEmail = '';
   let name = '';
