@@ -19,7 +19,7 @@ export const initSockets = (io: Server) => {
   io.use(async (socket: Socket, next) => {
     const cookieHeader = socket.handshake.headers.cookie || '';
     const cookies = parseCookies(cookieHeader);
-    const token = cookies.token;
+    const token = socket.handshake.auth?.token || cookies.token;
 
     if (!token) {
       return next(new Error('Authentication error: Missing token'));

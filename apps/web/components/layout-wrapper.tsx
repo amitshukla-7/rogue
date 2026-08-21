@@ -205,8 +205,8 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   };
 
   const logout = async () => {
-    try {
       await apiFetch('/api/auth/logout', { method: 'POST' });
+      if (typeof window !== 'undefined') localStorage.removeItem('token');
       setUser(null);
       disconnectSocket();
       router.push('/');
@@ -302,6 +302,17 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   };
 
   useEffect(() => {
+    // Capture token from URL if present (from Google OAuth callback) to fix cross-domain cookie stripping
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('token');
+      if (urlToken) {
+        localStorage.setItem('token', urlToken);
+        // Clean URL after capturing token
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+    
     refreshUser();
     // Fetch demo accounts list for profile switcher
     apiFetch('/api/auth/demo-accounts')

@@ -438,22 +438,21 @@ router.get('/google/callback', async (req: Request, res: Response) => {
 
     const isFirstTimeUser = userResult.rows.length === 0 || !user.handle;
 
-    setAuthCookie(res, { 
+    const payload = { 
       id: user.id, 
       email: user.email, 
       college_verified: !!user.college_verified,
       is_admin: !!user.is_admin,
       is_banned: !!user.is_banned 
-    });
+    };
+    
+    // Create the token explicitly so we can pass it in the URL
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'fallback-secret-for-dev', { expiresIn: '30d' });
+    setAuthCookie(res, payload);
     
     // Redirect logic: Admin to /admin, first-time users to /onboarding (edit profile), returning users to /
-    if (isAdminEmail) {
-      return res.redirect(`${frontendUrl}/admin`);
-    } else if (isFirstTimeUser) {
-      return res.redirect(`${frontendUrl}/onboarding`);
-    } else {
-      return res.redirect(`${frontendUrl}/`);
-    }
+    const redirectPath = isAdminEmail ? '/admin' : isFirstTimeUser ? '/onboarding' : '/';
+    return res.redirect(`${frontendUrl}${redirectPath}?token=${token}`);
   } catch (err: any) {
     console.error('Google Callback Database Error:', err);
     return res.status(500).json({ error: 'Internal Server Error' });

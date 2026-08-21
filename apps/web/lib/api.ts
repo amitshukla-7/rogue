@@ -1,6 +1,4 @@
-// In browser, ALWAYS use relative paths to hit the Next.js proxy and avoid 3rd-party cookie blocking.
-// In server components, use the full URL.
-const API_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+const API_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:3001');
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
@@ -11,11 +9,20 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
+  // Support token from localStorage for bulletproof cross-domain auth
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
       headers,
-      credentials: 'include', // Important to pass JWT cookies
+      credentials: 'include', // Still include for backend cookie fallback
+      cache: options.cache || 'no-store' // Prevent caching of auth states like 401
     });
 
     if (!response.ok) {
