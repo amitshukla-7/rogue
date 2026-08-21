@@ -11,6 +11,9 @@ let pool: Pool | null = null;
 if (process.env.DATABASE_URL) {
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    max: 150, // Significantly increased from default 10 to handle 1000+ concurrent active users
+    connectionTimeoutMillis: 10000, // Timeout after 10s instead of hanging indefinitely
+    idleTimeoutMillis: 30000,
     ssl: {
       rejectUnauthorized: false
     }
