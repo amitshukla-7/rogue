@@ -77,7 +77,12 @@ function enrichPost(post: any, currentUserId?: string) {
     };
   }
 
-  const comments = mockDb.post_comments.filter((c: any) => c.post_id === post.id);
+  let comments = mockDb.post_comments.filter((c: any) => c.post_id === post.id);
+  if (post.db_comments && Array.isArray(post.db_comments)) {
+    const existingIds = new Set(post.db_comments.map((c: any) => c.id));
+    const mockComments = comments.filter((c: any) => !existingIds.has(c.id));
+    comments = [...post.db_comments, ...mockComments];
+  }
   const upvotes = Math.max(0, post.upvotes || 0);
   const downvotes = Math.max(0, post.downvotes || 0);
   const score = Math.max(0, upvotes - downvotes);
@@ -339,6 +344,28 @@ router.get('/', async (req, res) => {
         `);
       } catch (e) {}
 
+      let allDbComments: any[] = [];
+      try {
+        const cRes = await query(`
+          SELECT c.*, u.name as author_name, u.handle as author_handle, u.photos as author_photos
+          FROM post_comments c
+          LEFT JOIN users u ON (c.author_id::text = u.id::text OR LOWER(c.author_id::text) = LOWER(u.email::text))
+        `);
+        allDbComments = cRes.rows.map(r => ({
+          id: r.id,
+          post_id: r.post_id,
+          author_id: r.author_id,
+          author: {
+            id: r.author_id,
+            name: r.author_name || 'Student',
+            handle: r.author_handle || (r.author_name ? r.author_name.toLowerCase().replace(/\s+/g, '_') : 'student'),
+            photos: r.author_photos || []
+          },
+          content: r.content,
+          created_at: r.created_at
+        }));
+      } catch (e) {}
+
       try {
         const dbRes = await query(`
           SELECT p.*, 
@@ -370,6 +397,7 @@ router.get('/', async (req, res) => {
               upvotes: Math.max(0, row.upvotes || 0),
               downvotes: Math.max(0, row.downvotes || 0),
               created_at: row.created_at,
+              db_comments: allDbComments.filter(c => c.post_id === row.id),
               author: {
                 id: row.author_id,
                 name: row.author_name || 'Student',
