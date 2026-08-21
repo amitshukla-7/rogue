@@ -288,7 +288,8 @@ router.get('/google/callback', async (req: Request, res: Response) => {
   const isProduction = process.env.NODE_ENV === 'production';
   const protocol = isProduction ? 'https' : (req.protocol || 'http');
   const backendUrl = process.env.BACKEND_URL ? process.env.BACKEND_URL.trim().replace(/\/$/, '') : `${protocol}://${reqHost}`;
-  const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.trim().replace(/\/$/, '') : 'http://localhost:3000';
+  // Use backendUrl (which inherits frontend reqHost due to Next.js proxying) as the frontendUrl base
+  const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.trim().replace(/\/$/, '') : `${protocol}://${reqHost}`;
 
   let userEmail = '';
   let name = '';
