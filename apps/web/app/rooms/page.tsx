@@ -64,10 +64,10 @@ export default function RoomsPage() {
 
   const handleJoinRoom = async (roomId: string) => {
     if (!user) {
-      demoLogin('student-demo-1').catch(() => {});
-    } else {
-      apiFetch(`/api/rooms/${roomId}/join`, { method: 'POST' }).catch(() => {});
+      window.dispatchEvent(new CustomEvent('require-auth'));
+      return;
     }
+    apiFetch(`/api/rooms/${roomId}/join`, { method: 'POST' }).catch(() => {});
     router.push(`/rooms/${roomId}`);
   };
 

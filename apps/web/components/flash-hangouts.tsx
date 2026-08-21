@@ -200,7 +200,9 @@ export default function FlashHangoutsSection() {
     setJoinLoadingId(hangout.id);
     try {
       if (!user) {
-        await demoLogin('student-demo-1');
+        window.dispatchEvent(new CustomEvent('require-auth'));
+        setJoinLoadingId(null);
+        return;
       }
       await apiFetch(`/api/rooms/hangouts/${hangout.id}/join`, { method: 'POST' });
       router.push(`/rooms/${hangout.room_id}`);
@@ -216,7 +218,8 @@ export default function FlashHangoutsSection() {
     if (!title.trim() || !location.trim()) return;
 
     if (!user) {
-      await demoLogin('student-demo-1');
+      window.dispatchEvent(new CustomEvent('require-auth'));
+      return;
     }
 
     setCreateLoading(true);
@@ -294,7 +297,13 @@ export default function FlashHangoutsSection() {
         </div>
 
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            if (!user) {
+              window.dispatchEvent(new CustomEvent('require-auth'));
+              return;
+            }
+            setShowCreateModal(true);
+          }}
           className="px-3.5 py-2 bg-coral hover:bg-coral-hover text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
         >
           <Plus className="w-4 h-4" />
@@ -317,7 +326,13 @@ export default function FlashHangoutsSection() {
             Be the first student to create a meetup room! Connect with peers on campus right now.
           </p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              if (!user) {
+                window.dispatchEvent(new CustomEvent('require-auth'));
+                return;
+              }
+              setShowCreateModal(true);
+            }}
             className="mt-2 px-4 py-2 bg-[#1F2230] hover:bg-coral/20 text-coral border border-coral/40 text-xs font-bold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" /> Create Room

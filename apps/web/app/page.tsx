@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Plus, 
   Sparkles, 
@@ -35,6 +36,7 @@ import PostActionMenu from '../components/post-action-menu';
 
 export default function HomePage() {
   const { user } = useUser();
+  const router = useRouter();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -99,9 +101,13 @@ export default function HomePage() {
     }
   };
 
+  const requireAuth = () => {
+    window.dispatchEvent(new CustomEvent('require-auth'));
+  };
+
   const handleVote = async (postId: string, voteType: 'up' | 'down') => {
     if (!user) {
-      alert('Please sign in to vote on posts!');
+      requireAuth();
       return;
     }
 
@@ -153,7 +159,7 @@ export default function HomePage() {
 
   const handlePollVote = async (postId: string, optionId: string) => {
     if (!user) {
-      alert('Please sign in to vote on polls!');
+      requireAuth();
       return;
     }
 
@@ -173,7 +179,7 @@ export default function HomePage() {
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      alert('Please sign in to create a post!');
+      requireAuth();
       return;
     }
     if (!postTitle.trim() || !postContent.trim()) return;
@@ -227,7 +233,7 @@ export default function HomePage() {
   const handleAddComment = async (postId: string, e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      alert('Please sign in to comment!');
+      requireAuth();
       return;
     }
     if (!commentText.trim()) return;
@@ -303,7 +309,13 @@ export default function HomePage() {
               </div>
 
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => {
+                  if (!user) {
+                    requireAuth();
+                    return;
+                  }
+                  setShowCreateModal(true);
+                }}
                 className="px-5 py-2.5 rounded-2xl bg-coral hover:bg-coral-hover text-white text-xs font-bold shadow-lg shadow-coral/20 flex items-center gap-2 transition-all transform hover:scale-105 cursor-pointer flex-shrink-0"
               >
                 <Plus className="w-4 h-4" /> Create Post
@@ -356,8 +368,14 @@ export default function HomePage() {
               <h3 className="text-sm font-bold text-white">No posts in this topic yet</h3>
               <p className="text-xs text-text-muted mt-1">Be the first student to start a discussion!</p>
               <button
-                onClick={() => setShowCreateModal(true)}
-                className="mt-4 px-5 py-2 rounded-xl bg-coral text-white text-xs font-bold"
+                onClick={() => {
+                  if (!user) {
+                    requireAuth();
+                    return;
+                  }
+                  setShowCreateModal(true);
+                }}
+                className="mt-4 px-5 py-2 rounded-xl bg-coral text-white text-xs font-bold cursor-pointer"
               >
                 Create Post
               </button>
@@ -789,9 +807,15 @@ export default function HomePage() {
                 const roomType = (room.type as string) || '';
                 const isSquad = roomType === 'plan' || roomType === 'private' || roomType === 'squad';
                 return (
-                  <Link
+                  <div
                     key={room.id}
-                    href={`/rooms/${room.id}`}
+                    onClick={() => {
+                      if (!user) {
+                        requireAuth();
+                        return;
+                      }
+                      router.push(`/rooms/${room.id}`);
+                    }}
                     className="p-3 rounded-2xl bg-[#0F1015] border border-[#232635] hover:border-coral/50 transition-all flex items-center justify-between group cursor-pointer"
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -817,7 +841,7 @@ export default function HomePage() {
                     <span className="text-xs font-bold text-coral group-hover:translate-x-0.5 transition-transform shrink-0 ml-2">
                       Enter →
                     </span>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

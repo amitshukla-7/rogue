@@ -22,7 +22,8 @@ import {
   Send,
   AlertTriangle,
   X,
-  Lightbulb
+  Lightbulb,
+  Lock
 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 import { getAvatarUrl } from '../lib/avatar';
@@ -146,6 +147,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [globalShowAuthModal, setGlobalShowAuthModal] = useState(false);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -256,9 +258,16 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
     document.addEventListener('mousedown', handleOutsideClick);
     document.addEventListener('touchstart', handleOutsideClick);
+    
+    const handleRequireAuth = () => {
+      setGlobalShowAuthModal(true);
+    };
+    window.addEventListener('require-auth', handleRequireAuth);
+
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
       document.removeEventListener('touchstart', handleOutsideClick);
+      window.removeEventListener('require-auth', handleRequireAuth);
     };
   }, []);
 
@@ -400,7 +409,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     const isAdminRoute = pathname.startsWith('/admin');
 
     if (!user) {
-      if (!isPublicAuthPage) {
+      if (isAdminRoute && !isPublicAuthPage) {
         router.push('/login');
       }
       return;
@@ -436,19 +445,6 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   
   if (isAdminRoute || isPublicAuthPage) {
     return <UserContext.Provider value={{ user, loading, refreshUser, logout, demoLogin }}>{children}</UserContext.Provider>;
-  }
-
-  if (!user) {
-    return (
-      <UserContext.Provider value={{ user, loading, refreshUser, logout, demoLogin }}>
-        <div className="flex h-screen w-screen items-center justify-center bg-[#0D0E15]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-coral border-t-transparent"></div>
-            <p className="font-sans text-xs text-text-muted animate-pulse">Redirecting to login...</p>
-          </div>
-        </div>
-      </UserContext.Provider>
-    );
   }
 
   if (user?.is_banned) {
@@ -630,6 +626,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                       <div ref={notifContainerRef} className="relative">
                         <button 
                           onClick={() => {
+                            if (!user) {
+                              setGlobalShowAuthModal(true);
+                              return;
+                            }
                             if (warnings.some(w => !w.read)) {
                               setShowWarningModal(true);
                             } else {
@@ -818,7 +818,13 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                     <div className="flex items-center gap-2">
                       {/* Mobile Lightbulb / Feedback button */}
                       <button
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-feedback-widget'))}
+                        onClick={() => {
+                          if (!user) {
+                            setGlobalShowAuthModal(true);
+                            return;
+                          }
+                          window.dispatchEvent(new CustomEvent('open-feedback-widget'));
+                        }}
                         className="w-8 h-8 rounded-xl bg-[#151722] border border-[#232635] flex items-center justify-center text-coral hover:text-white transition-colors cursor-pointer"
                         title="Send Feedback to Admin"
                       >
@@ -829,6 +835,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
                       <div className="relative">
                         <button
                           onClick={() => {
+                            if (!user) {
+                              setGlobalShowAuthModal(true);
+                              return;
+                            }
                             if (warnings.some(w => !w.read)) {
                               setShowWarningModal(true);
                             } else {
@@ -946,10 +956,32 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
             {/* PAGE CONTENT */}
             {(() => {
               const isIndividualRoom = pathname.startsWith('/rooms/') && pathname !== '/rooms';
+              const isPublicRoute = pathname === '/' || pathname === '/rooms';
+              const showLockScreen = !user && !isPublicRoute;
               return (
                 <>
                   <main className={`flex-1 overflow-y-auto ${isIndividualRoom ? 'pb-0' : 'pb-20 lg:pb-0'} relative bg-[#0D0E15]`}>
-                    {children}
+                    {showLockScreen ? (
+                      <div className="flex h-full w-full items-center justify-center p-6 bg-[#0D0E15]">
+                        <div className="flex flex-col items-center justify-center text-center max-w-[340px] w-full animate-in fade-in duration-500">
+                          <div className="w-12 h-12 rounded-full bg-coral/10 border border-coral/20 flex items-center justify-center mb-4 shadow-sm">
+                            <Lock className="w-5 h-5 text-coral" />
+                          </div>
+                          <h2 className="text-base font-bold text-white tracking-wide mb-1.5">Restricted Area</h2>
+                          <p className="text-[13px] text-[#8F96A6] mb-6 leading-relaxed">
+                            This section is reserved for verified students. Create an account to unlock your campus network.
+                          </p>
+                          <Link href="/login" className="w-full py-2.5 bg-coral hover:bg-coral-hover text-white rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm">
+                            <LogIn className="w-3.5 h-3.5" /> Sign In to Access
+                          </Link>
+                          <Link href="/" className="mt-4 text-xs font-semibold text-[#5A5F73] hover:text-white transition-colors cursor-pointer">
+                            Return to Campus Feed
+                          </Link>
+                        </div>
+                      </div>
+                    ) : (
+                      children
+                    )}
                   </main>
 
                   {/* MOBILE BOTTOM NAVIGATION BAR */}
@@ -1068,7 +1100,44 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         )}
 
         {/* Global Feedback & Suggestion Floating Widget */}
-        <FeedbackWidget />
+        {user && <FeedbackWidget />}
+
+        {/* Global Flashy Auth Modal for interacting on public pages without login */}
+        {globalShowAuthModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setGlobalShowAuthModal(false)}></div>
+            <div className="bg-[#111218]/95 backdrop-blur-xl border border-[#202330] rounded-2xl p-6 shadow-2xl max-w-[340px] w-full relative z-10 flex flex-col text-left animate-in slide-in-from-bottom-8 fade-in duration-300">
+              <button onClick={() => setGlobalShowAuthModal(false)} className="absolute top-4 right-4 text-[#8F96A6] hover:text-white transition-colors cursor-pointer p-1">
+                <X className="w-4 h-4" />
+              </button>
+              
+              <div className="flex items-center gap-3.5 mb-3.5">
+                <div className="w-10 h-10 rounded-full bg-coral/10 border border-coral/20 flex items-center justify-center shrink-0">
+                  <Lock className="w-4 h-4 text-coral" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white tracking-wide">Sign in to interact</h2>
+                  <p className="text-[11px] text-[#8F96A6] mt-0.5">
+                    Join the campus network
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#A0A6B8] mb-5 leading-relaxed">
+                You're in view-only mode. Create an account to post, vote, and chat with peers.
+              </p>
+              
+              <div className="flex items-center gap-3">
+                <button onClick={() => setGlobalShowAuthModal(false)} className="flex-1 py-2.5 rounded-xl bg-[#1A1C28] hover:bg-[#232738] text-white text-xs font-semibold transition-colors cursor-pointer">
+                  Not Now
+                </button>
+                <Link href="/login" onClick={() => setGlobalShowAuthModal(false)} className="flex-1 py-2.5 rounded-xl bg-coral hover:bg-coral-hover text-white text-xs font-bold transition-colors text-center cursor-pointer">
+                  Sign In
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

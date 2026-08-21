@@ -60,6 +60,10 @@ export default function RoomDetailPage() {
   const { user, demoLogin } = useUser();
   const router = useRouter();
 
+  const requireAuth = () => {
+    window.dispatchEvent(new CustomEvent('require-auth'));
+  };
+
   // State
   const [room, setRoom] = useState<any>(null);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
@@ -166,6 +170,10 @@ export default function RoomDetailPage() {
   const [pollVotes, setPollVotes] = useState<Record<string, Record<number, string[]>>>({});
 
   const handleDeleteRoomMessage = async (msgId: string) => {
+    if (!user) {
+      requireAuth();
+      return;
+    }
     if (!confirm('Delete this message from the group chat?')) return;
     try {
       await apiFetch(`/api/rooms/${id}/messages/${msgId}`, { method: 'DELETE' });
@@ -195,6 +203,10 @@ export default function RoomDetailPage() {
 
   const handleCreatePollSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      requireAuth();
+      return;
+    }
     const cleanQuestion = pollQuestion.trim();
     const cleanOptions = pollOptions.map((o) => o.trim()).filter(Boolean);
 
@@ -233,7 +245,10 @@ export default function RoomDetailPage() {
   };
 
   const handleVotePoll = (msgId: string, optionIndex: number) => {
-    if (!user?.id) return;
+    if (!user) {
+      requireAuth();
+      return;
+    }
     setPollVotes((prev) => {
       const msgVotes = prev[msgId] || {};
       const currentVotersForOpt = msgVotes[optionIndex] || [];
@@ -535,6 +550,8 @@ export default function RoomDetailPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessageText(e.target.value);
     
+    if (!user) return; // Unauthenticated users don't trigger typing events
+    
     socket.emit('room:typing', { roomId: id, isTyping: true });
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -546,6 +563,10 @@ export default function RoomDetailPage() {
   // Send message with Reply context
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      requireAuth();
+      return;
+    }
     const content = messageText.trim();
     if (!content) return;
 
@@ -608,7 +629,11 @@ export default function RoomDetailPage() {
 
   // Handle Emoji Reaction tap (Toggle per user)
   const handleToggleReaction = (msgId: string, emoji: string) => {
-    const currentUserId = user?.id || 'me';
+    if (!user) {
+      requireAuth();
+      return;
+    }
+    const currentUserId = user.id;
     const currentMsgReactions = messageReactions[msgId] || {};
     const currentEmojiUsers = currentMsgReactions[emoji] || [];
     const isCurrentlyReacted = currentEmojiUsers.includes(currentUserId);

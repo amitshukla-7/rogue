@@ -1,4 +1,5 @@
 import { Router, Response, Request } from 'express';
+import jwt from 'jsonwebtoken';
 import { query, mockDb } from '../db/index.js';
 import { authenticateToken, requireCollegeVerified, AuthRequest } from '../middleware/auth.js';
 
@@ -46,8 +47,22 @@ export const cleanupExpiredHangouts = async () => {
 };
 
 // GET active flash hangouts
-router.get('/hangouts', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/hangouts', async (req: AuthRequest, res: Response) => {
   try {
+    let token = req.cookies?.token;
+    if (!token && req.headers['authorization']) {
+      const authHeader = req.headers['authorization'];
+      if (authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+      }
+    }
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-for-dev') as any;
+        req.user = decoded;
+      } catch (err) {}
+    }
+
     await cleanupExpiredHangouts();
     const now = new Date();
 
@@ -335,7 +350,21 @@ router.delete('/hangouts/:id', authenticateToken, async (req: AuthRequest, res: 
 });
 
 // GET active rooms sorted by recent activity (Filtered by visibility and squad membership)
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
+  let token = req.cookies?.token;
+  if (!token && req.headers['authorization']) {
+    const authHeader = req.headers['authorization'];
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+  }
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-for-dev') as any;
+      req.user = decoded;
+    } catch (err) {}
+  }
+
   const currentUserId = req.user?.id;
   const now = new Date();
 
