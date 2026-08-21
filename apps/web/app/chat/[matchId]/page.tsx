@@ -303,7 +303,7 @@ export default function ChatDetailPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] lg:h-[calc(100vh-4.5rem)] bg-[#0F1015] overflow-hidden relative">
+    <div className="flex h-full bg-[#0F1015] overflow-hidden relative">
       
       {/* Touch/click outside backdrop overlay to close sidebar */}
       {isSidebarOpen && (

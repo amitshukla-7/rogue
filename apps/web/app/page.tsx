@@ -464,7 +464,7 @@ export default function HomePage() {
                 {/* Post Body */}
                 <div className="space-y-2">
                   <h2 className="text-base md:text-lg font-bold text-white leading-snug">{post.title}</h2>
-                  <p className="text-xs md:text-sm text-lavender leading-relaxed whitespace-pre-line">{post.content}</p>
+                  <p className="text-xs md:text-sm text-gray-300 leading-relaxed whitespace-pre-line">{post.content}</p>
                 </div>
 
                 {/* Interactive Poll Section if Post Has Poll */}
@@ -646,7 +646,7 @@ export default function HomePage() {
                                       <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-coral/15 text-coral font-mono border border-coral/20">You</span>
                                     )}
                                   </div>
-                                  <p className="text-xs text-lavender mt-0.5 break-words">
+                                  <p className="text-xs text-gray-300 mt-0.5 break-words">
                                     {deletingCommentId === comment.id ? (
                                       <span className="italic text-text-muted">Deleting...</span>
                                     ) : comment.content}

@@ -80,7 +80,7 @@ function SuspendedAccountView({ user, logout }: { user: User; logout: () => Prom
   };
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-[#0D0E15] p-6 font-sans">
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#0D0E15] p-6 font-sans">
       <div className="max-w-lg w-full bg-[#151722] border border-red-500/30 rounded-3xl p-8 shadow-2xl flex flex-col gap-6 text-white relative overflow-hidden">
         <div className="w-16 h-16 rounded-3xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 mx-auto shadow-lg shadow-red-500/10">
           <Ban className="w-8 h-8" />
@@ -431,7 +431,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#0D0E15]">
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-[#0D0E15]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-coral border-t-transparent"></div>
           <p className="font-sans text-xs text-text-muted animate-pulse">Loading Rogue...</p>
@@ -469,7 +469,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   return (
     <UserContext.Provider value={{ user, loading, refreshUser, logout, demoLogin }}>
-      <div className="flex flex-col h-screen w-screen bg-[#0D0E15] text-white overflow-hidden font-sans select-none">
+      <div className="flex flex-col h-[100dvh] w-full bg-[#0D0E15] text-white overflow-hidden font-sans select-none">
         
         <div className="flex flex-1 overflow-hidden">
           {/* DESKTOP SIDEBAR */}

@@ -776,8 +776,7 @@ export default function RoomDetailPage() {
 
   return (
     <div
-      style={{ height: viewportHeight ? `${viewportHeight}px` : undefined }}
-      className="flex h-[100dvh] w-full bg-[#0E0F14] text-[#E2E8F0] overflow-hidden relative"
+      className="flex h-full w-full bg-[#0E0F14] text-[#E2E8F0] overflow-hidden relative"
     >
       
       {/* Dark Overlay to close Sidebars when clicking outside */}

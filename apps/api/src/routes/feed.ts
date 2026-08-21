@@ -364,7 +364,28 @@ router.get('/', async (req, res) => {
           content: r.content,
           created_at: r.created_at
         }));
-      } catch (e) {}
+      } catch (e) {
+        try {
+          const cRes2 = await query(`
+            SELECT c.*, u.name as author_name, u.handle as author_handle, u.photos as author_photos
+            FROM comments c
+            LEFT JOIN users u ON (c.author_id::text = u.id::text OR LOWER(c.author_id::text) = LOWER(u.email::text))
+          `);
+          allDbComments = cRes2.rows.map(r => ({
+            id: r.id,
+            post_id: r.post_id,
+            author_id: r.author_id,
+            author: {
+              id: r.author_id,
+              name: r.author_name || 'Student',
+              handle: r.author_handle || (r.author_name ? r.author_name.toLowerCase().replace(/\s+/g, '_') : 'student'),
+              photos: r.author_photos || []
+            },
+            content: r.content,
+            created_at: r.created_at
+          }));
+        } catch (e2) {}
+      }
 
       try {
         const dbRes = await query(`
@@ -665,7 +686,34 @@ router.get('/:id', async (req, res) => {
           const existingIds = new Set(dbC.map(c => c.id));
           rawComments = [...dbC, ...rawComments.filter(c => !existingIds.has(c.id))];
         }
-      } catch (e) {}
+      } catch (e) {
+        try {
+          const dbComments2 = await query(`
+            SELECT c.*, u.name as author_name, u.handle as author_handle, u.photos as author_photos
+            FROM comments c
+            LEFT JOIN users u ON (c.author_id::text = u.id::text OR LOWER(c.author_id::text) = LOWER(u.email::text))
+            WHERE c.post_id::text = $1
+            ORDER BY c.created_at ASC
+          `, [id]);
+          if (dbComments2.rows.length > 0) {
+            const dbC = dbComments2.rows.map(r => ({
+              id: r.id,
+              post_id: r.post_id,
+              author_id: r.author_id,
+              author: {
+                id: r.author_id,
+                name: r.author_name || 'Student',
+                handle: r.author_handle || (r.author_name ? r.author_name.toLowerCase().replace(/\s+/g, '_') : 'student'),
+                photos: r.author_photos || []
+              },
+              content: r.content,
+              created_at: r.created_at
+            }));
+            const existingIds = new Set(dbC.map(c => c.id));
+            rawComments = [...dbC, ...rawComments.filter(c => !existingIds.has(c.id))];
+          }
+        } catch (e2) {}
+      }
     }
 
     const comments = rawComments.map(c => {
