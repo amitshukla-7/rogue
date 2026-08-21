@@ -15,12 +15,19 @@ export interface AuthRequest<P = any, ResBody = any, ReqBody = any, ReqQuery = a
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-  let token = req.cookies?.token;
-  if (!token && req.headers['authorization']) {
+  let token = undefined;
+  
+  // Prioritize explicit Authorization header (from localStorage)
+  if (req.headers['authorization']) {
     const authHeader = req.headers['authorization'];
     if (authHeader.startsWith('Bearer ')) {
       token = authHeader.split(' ')[1];
     }
+  }
+  
+  // Fallback to cookie if no Authorization header
+  if (!token) {
+    token = req.cookies?.token;
   }
 
   if (!token) {

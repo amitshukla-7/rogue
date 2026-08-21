@@ -171,7 +171,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   const refreshUser = async () => {
     try {
-      const data = await apiFetch('/api/users/me');
+      const data = await apiFetch(`/api/users/me?_t=${Date.now()}`);
       if (data && data.user) {
         setUser(data.user);
         connectSocket();
