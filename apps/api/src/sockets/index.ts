@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { query } from '../db/index.js';
+import { query, mockDb } from '../db/index.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev';
 
@@ -16,7 +16,7 @@ const parseCookies = (cookieString: string) => {
 
 export const initSockets = (io: Server) => {
   // Socket.IO middleware for authentication
-  io.use((socket: Socket, next) => {
+  io.use(async (socket: Socket, next) => {
     const cookieHeader = socket.handshake.headers.cookie || '';
     const cookies = parseCookies(cookieHeader);
     const token = cookies.token;
@@ -26,7 +26,18 @@ export const initSockets = (io: Server) => {
     }
 
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; college_verified: boolean; is_admin?: boolean };
+      const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; college_verified: boolean; is_admin?: boolean, name?: string };
+      
+      try {
+        if (process.env.DATABASE_URL) {
+          const res = await query('SELECT name FROM users WHERE id = $1', [decoded.id]);
+          if (res.rows.length > 0) decoded.name = res.rows[0].name;
+        } else {
+          const foundUser = mockDb.users.find((u: any) => u.id === decoded.id);
+          if (foundUser) decoded.name = foundUser.name;
+        }
+      } catch (err) {}
+
       (socket as any).user = decoded;
       next();
     } catch (err) {
@@ -79,7 +90,7 @@ export const initSockets = (io: Server) => {
       socket.to(roomId).emit('room:typing', {
         roomId,
         userId: user.id,
-        userName: user.name || user.email || 'Student',
+        userName: user.name || 'Student',
         isTyping
       });
     });
